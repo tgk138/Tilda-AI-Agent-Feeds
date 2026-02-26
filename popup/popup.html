@@ -299,31 +299,43 @@
 
   <div id="tab-settings" class="tab-content active">
     <div class="section">
-      <div class="section-title">API</div>
+      <div class="section-title">🧠 Провайдер ТЕКСТА</div>
     
-    <label for="apiProvider">Провайдер API</label>
-    <select id="apiProvider">
-      <option value="kie">kie.ai (Default)</option>
-      <option value="official">Gemini (Official) — В РФ нужен VPN</option>
-    </select>
+    <label for="textProvider">Провайдер</label>
+    <select id="textProvider"></select>
     
-    <div id="kieKeyGroup">
-      <label for="apiKey">API Key (kie.ai)</label>
-      <input type="password" id="apiKey" placeholder="Вставьте ключ">
-      <p class="hint" style="margin-bottom: 12px;">Один ключ для Gemini 3 Pro и Nano Banana Pro. <a href="https://kie.ai" target="_blank" rel="noopener">Получить</a></p>
-    </div>
+    <label for="textApiKey">API Key</label>
+    <input type="password" id="textApiKey" placeholder="Вставьте ключ провайдера текста">
     
-    <div id="officialKeyGroup" style="display: none;">
-      <label for="officialApiKey">API Key (Gemini Official)</label>
-      <input type="password" id="officialApiKey" placeholder="Вставьте официальный ключ AI Studio">
-      <p class="hint" style="margin-bottom: 12px;">Работает напрямую с Google AI Studio. <a href="https://aistudio.google.com/" target="_blank" rel="noopener">Получить</a></p>
-    </div>
+    <label for="textModel">Модель</label>
+    <select id="textModel"></select>
+    <p class="hint" id="textProviderHint"></p>
 
     <div class="row">
-      <button type="button" class="primary" id="save">Сохранить</button>
-      <button type="button" class="secondary" id="check">Проверить</button>
+      <button type="button" class="primary" id="saveText">Сохранить</button>
+      <button type="button" class="secondary" id="checkText">Проверить</button>
     </div>
-    <div id="status" class="status"></div>
+    <div id="textStatus" class="status"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🎨 Провайдер ИЗОБРАЖЕНИЙ</div>
+
+    <label for="mediaProvider">Провайдер</label>
+    <select id="mediaProvider"></select>
+    
+    <label for="mediaApiKey">API Key</label>
+    <input type="password" id="mediaApiKey" placeholder="Вставьте ключ провайдера изображений">
+    
+    <label for="mediaModel">Модель</label>
+    <select id="mediaModel"></select>
+    <p class="hint" id="mediaProviderHint"></p>
+
+    <div class="row">
+      <button type="button" class="primary" id="saveMedia">Сохранить</button>
+      <button type="button" class="secondary" id="checkMedia">Проверить</button>
+    </div>
+    <div id="mediaStatus" class="status"></div>
   </div>
   <div class="section">
     <div class="section-title">Автор по умолчанию</div>
