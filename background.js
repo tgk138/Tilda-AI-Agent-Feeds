@@ -1,17 +1,37 @@
-importScripts('lib/api-text.js', 'lib/api-image.js', 'lib/api-wordstat.js');
+importScripts(
+  'lib/constants.js',
+  'lib/storage.js',
+  'lib/providers/text/base.js',
+  'lib/providers/text/kie.js',
+  'lib/providers/text/google.js',
+  'lib/providers/text/openrouter.js',
+  'lib/providers/text/openai.js',
+  'lib/providers/text/anthropic.js',
+  'lib/providers/media/base.js',
+  'lib/providers/media/kie-banana.js',
+  'lib/providers/media/google-imagen.js',
+  'lib/providers/media/gpt-image.js',
+  'lib/providers/registry.js',
+  'lib/api-text.js',
+  'lib/api-image.js',
+  'lib/api-wordstat.js'
+);
 
-const API_KEY_STORAGE = 'tilda_flows_api_key';
-const OFFICIAL_API_KEY_STORAGE = 'tilda_flows_official_gemini_api_key';
-const API_PROVIDER_STORAGE = 'tilda_flows_api_provider';
-const WORDSTAT_API_KEY_STORAGE = 'tilda_flows_wordstat_api_key';
-const WORDSTAT_REPORTS_STORAGE = 'tilda_flows_wordstat_reports';
-const WORDSTAT_REGIONS_TREE_STORAGE = 'tilda_flows_wordstat_regions_tree';
-const BRAND_KNOWLEDGE_KEY = 'tilda_flows_brand_knowledge';
-const TONE_OF_VOICE_KEY = 'tilda_flows_tone_of_voice';
-const CUSTOM_FOOTER_KEY = 'tilda_flows_custom_footer';
-const HISTORY_STORAGE = 'tilda_flows_history';
-const WORDSTAT_REPORT_VERSION = 3;
-const STORAGE_KEYS = [API_KEY_STORAGE, OFFICIAL_API_KEY_STORAGE, API_PROVIDER_STORAGE, WORDSTAT_API_KEY_STORAGE, 'tilda_flows_author_name', 'tilda_flows_author_link', BRAND_KNOWLEDGE_KEY, TONE_OF_VOICE_KEY, CUSTOM_FOOTER_KEY, HISTORY_STORAGE];
+// Initialize provider registry
+ProviderRegistry.init();
+
+// Legacy aliases for backward compatibility with api-text.js / api-image.js
+const API_KEY_STORAGE = SK.LEGACY_API_KEY;
+const OFFICIAL_API_KEY_STORAGE = SK.LEGACY_OFFICIAL_KEY;
+const API_PROVIDER_STORAGE = SK.LEGACY_PROVIDER;
+const WORDSTAT_API_KEY_STORAGE = SK.WORDSTAT_API_KEY;
+const WORDSTAT_REPORTS_STORAGE = SK.WORDSTAT_REPORTS;
+const WORDSTAT_REGIONS_TREE_STORAGE = SK.WORDSTAT_REGIONS_TREE;
+const BRAND_KNOWLEDGE_KEY = SK.BRAND_KNOWLEDGE;
+const TONE_OF_VOICE_KEY = SK.TONE_OF_VOICE;
+const CUSTOM_FOOTER_KEY = SK.CUSTOM_FOOTER;
+const HISTORY_STORAGE = SK.HISTORY;
+const STORAGE_KEYS = STORAGE_KEYS_ALL;
 
 function detectTopicContext(text) {
   const t = (text || '').toLowerCase();
@@ -180,6 +200,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.storage.local.get(STORAGE_KEYS, sendResponse);
     return true;
   }
+  if (message.action === 'listProviders') {
+    sendResponse({
+      text: ProviderRegistry.listTextProviders(),
+      media: ProviderRegistry.listMediaProviders(),
+    });
+    return true;
+  }
+  if (message.action === 'checkTextKey') {
+    handleCheckTextKey(message.providerId, message.apiKey, message.model, sendResponse);
+    return true;
+  }
+  if (message.action === 'checkMediaKey') {
+    handleCheckMediaKey(message.providerId, message.apiKey, sendResponse);
+    return true;
+  }
   if (message.action === 'getWordstatRegions') {
     handleGetWordstatRegions(sendResponse);
     return true;
@@ -188,13 +223,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function getApiConfig() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get([API_KEY_STORAGE, OFFICIAL_API_KEY_STORAGE, API_PROVIDER_STORAGE], (r) => {
-      const provider = r[API_PROVIDER_STORAGE] || 'kie';
-      const key = provider === 'official' ? r[OFFICIAL_API_KEY_STORAGE] : r[API_KEY_STORAGE];
-      resolve({ apiKey: key || null, apiProvider: provider });
-    });
-  });
+  const textCfg = await StorageHelper.getTextConfig();
+  // Map new provider IDs back to legacy format for existing code paths
+  const legacyProvider = textCfg.provider === TEXT_PROVIDERS.GOOGLE ? 'official' : 'kie';
+  return {
+    apiKey: textCfg.apiKey || null,
+    apiProvider: legacyProvider,
+    // New fields for provider-aware code
+    textProvider: textCfg.provider,
+    textModel: textCfg.model,
+    textApiKey: textCfg.apiKey,
+  };
+}
+
+async function getMediaApiConfig() {
+  const mediaCfg = await StorageHelper.getMediaConfig();
+  return {
+    mediaProvider: mediaCfg.provider,
+    mediaModel: mediaCfg.model,
+    mediaApiKey: mediaCfg.apiKey,
+  };
 }
 
 async function getApiKey() {
@@ -849,5 +897,35 @@ async function handleGenerateFullPost(msg, tabId, sendResponse) {
     sendResponse({ data, imageUrl });
   } catch (err) {
     sendResponse({ error: err.message || String(err) });
+  }
+}
+
+// ── Provider Key Checking ─────────────────────────────────────────────────────
+
+async function handleCheckTextKey(providerId, apiKey, model, sendResponse) {
+  try {
+    const provider = ProviderRegistry.getText(providerId);
+    if (!provider) {
+      sendResponse({ valid: false, error: `Unknown text provider: ${providerId}` });
+      return;
+    }
+    const result = await provider.checkKey(apiKey, model);
+    sendResponse(result);
+  } catch (err) {
+    sendResponse({ valid: false, error: err.message || String(err) });
+  }
+}
+
+async function handleCheckMediaKey(providerId, apiKey, sendResponse) {
+  try {
+    const provider = ProviderRegistry.getMedia(providerId);
+    if (!provider) {
+      sendResponse({ valid: false, error: `Unknown media provider: ${providerId}` });
+      return;
+    }
+    const result = await provider.checkKey(apiKey);
+    sendResponse(result);
+  } catch (err) {
+    sendResponse({ valid: false, error: err.message || String(err) });
   }
 }
