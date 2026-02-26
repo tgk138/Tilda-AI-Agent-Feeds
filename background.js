@@ -1,5 +1,9 @@
 importScripts(
   'lib/constants.js',
+  'lib/errors.js',
+  'lib/api-client.js',
+  'lib/json-repair.js',
+  'lib/error-log.js',
   'lib/storage.js',
   'lib/providers/text/base.js',
   'lib/providers/text/kie.js',
@@ -213,6 +217,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if (message.action === 'checkMediaKey') {
     handleCheckMediaKey(message.providerId, message.apiKey, sendResponse);
+    return true;
+  }
+  if (message.action === 'getErrorLog') {
+    ErrorLog.getLog().then(sendResponse);
+    return true;
+  }
+  if (message.action === 'clearErrorLog') {
+    ErrorLog.clear().then(() => sendResponse({ ok: true }));
     return true;
   }
   if (message.action === 'getWordstatRegions') {
@@ -734,6 +746,7 @@ async function handleGenerateText(prompt, topicInfo, tabId, sendResponse) {
     const fullText = await streamChatCompletions(apiKey, fullPrompt, { includeThoughts: false, apiProvider });
     sendResponse({ text: fullText });
   } catch (err) {
+    ErrorLog.log('generateText', err, { provider: 'text' });
     sendResponse({ error: err.message || String(err) });
   }
 }
@@ -776,6 +789,7 @@ async function handleGenerateImage(prompt, input, tabId, sendResponse) {
     });
     sendResponse({ url });
   } catch (err) {
+    ErrorLog.log('generateImage', err, { provider: 'media' });
     sendResponse({ error: err.message || String(err) });
   }
 }
@@ -816,6 +830,7 @@ async function handleGenerateStructuredText(prompt, topicInfo, generationOptions
     } : { enabled: false, reason: keywordResearch && keywordResearch.reason ? keywordResearch.reason : 'off' };
     sendResponse({ data: structured });
   } catch (err) {
+    ErrorLog.log('generateStructuredText', err, { provider: 'text' });
     sendResponse({ error: err.message || String(err) });
   }
 }
@@ -896,6 +911,7 @@ async function handleGenerateFullPost(msg, tabId, sendResponse) {
     if (tabId) chrome.tabs.sendMessage(tabId, { type: 'fullPostProgress', step: 'cover_done' }).catch(() => {});
     sendResponse({ data, imageUrl });
   } catch (err) {
+    ErrorLog.log('generateFullPost', err, { provider: 'text+media' });
     sendResponse({ error: err.message || String(err) });
   }
 }
