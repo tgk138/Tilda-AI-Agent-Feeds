@@ -1,0 +1,18 @@
+{
+  "name": "tilda-ia-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chrome Extension — AI agent for Tilda Feeds: text generation, cover images, SEO keywords",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check-syntax": "node --check background.js && node --check popup/popup.js && node --check lib/constants.js && node --check lib/storage.js && node --check lib/api-text.js && node --check lib/api-image.js && node --check lib/api-wordstat.js && node --check lib/providers/registry.js && node --check content/content.js && node --check content/injected.js && echo 'All files OK'"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0",
+    "globals": "^16.0.0"
+  }
+}

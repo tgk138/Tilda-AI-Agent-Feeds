@@ -5,5 +5,3 @@ backup/
 playwright-*.js
 DEV.md
 PLAN.md
-package.json
-package-lock.json
