@@ -198,33 +198,15 @@
         </div>
         <div class="tfe-settings">
           <div class="tfe-settings-inner">
-            <div class="tfe-section-title tfe-flex-title">Провайдер API</div>
-            <select class="tfe-input tfe-api-provider" style="margin-bottom:12px">
-              <option value="kie">kie.ai (Default)</option>
-              <option value="official">Gemini (Official) — В РФ нужен VPN</option>
-            </select>
-            
-            <div class="tfe-kie-key-group">
-              <div class="tfe-section-title tfe-flex-title">
-                API ключ
-                <div class="tfe-tooltip-wrap">
-                  <span class="tfe-info-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
-                  <div class="tfe-tooltip-content">Один ключ для Gemini 3 Pro и Nano Banana Pro.<br><a href="https://kie.ai/dashboard/api" target="_blank" rel="noopener">Получить ключ на kie.ai →</a></div>
-                </div>
-              </div>
-              <input type="password" class="tfe-input tfe-api-key" placeholder="Вставьте ключ kie.ai" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true">
-            </div>
+            <div class="tfe-section-title tfe-flex-title">🧠 Провайдер ТЕКСТА</div>
+            <select class="tfe-input tfe-text-provider" style="margin-bottom:8px"></select>
+            <input type="password" class="tfe-input tfe-text-api-key" placeholder="API ключ провайдера текста" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" style="margin-bottom:4px">
+            <select class="tfe-input tfe-text-model" style="margin-bottom:12px"></select>
 
-            <div class="tfe-official-key-group" style="display:none;">
-              <div class="tfe-section-title tfe-flex-title">
-                API ключ (Gemini Official)
-                <div class="tfe-tooltip-wrap">
-                  <span class="tfe-info-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
-                  <div class="tfe-tooltip-content">Один ключ для всех моделей Google AI Studio. <br>Внимание: в РФ может потребоваться VPN.<br><a href="https://aistudio.google.com/" target="_blank" rel="noopener">Получить ключ →</a></div>
-                </div>
-              </div>
-              <input type="password" class="tfe-input tfe-official-api-key" placeholder="Вставьте ключ Google AI Studio" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true">
-            </div>
+            <div class="tfe-section-title tfe-flex-title">🎨 Провайдер ИЗОБРАЖЕНИЙ</div>
+            <select class="tfe-input tfe-media-provider" style="margin-bottom:8px"></select>
+            <input type="password" class="tfe-input tfe-media-api-key" placeholder="API ключ провайдера изображений" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" style="margin-bottom:4px">
+            <select class="tfe-input tfe-media-model" style="margin-bottom:12px"></select>
             
             <div class="tfe-section-title tfe-flex-title" style="margin-top:12px">
               Wordstat API
@@ -605,28 +587,80 @@
     var addRefBtn = root.querySelector('#tfe-add-ref');
     if (addRefBtn) addRefBtn.addEventListener('click', addReferenceRow);
     
-    var apiProviderEl = root.querySelector('.tfe-api-provider');
     var imageModelEl = root.querySelector('.tfe-image-model');
-    
-    if (apiProviderEl) {
-      apiProviderEl.addEventListener('change', function () {
-        var isOfficial = this.value === 'official';
-        var kieGroup = root.querySelector('.tfe-kie-key-group');
-        var offGroup = root.querySelector('.tfe-official-key-group');
-        if (kieGroup) kieGroup.style.display = isOfficial ? 'none' : 'block';
-        if (offGroup) offGroup.style.display = isOfficial ? 'block' : 'none';
-        
-        // Автоматически переключаем модель генерации обложки
-        if (imageModelEl) {
-          if (isOfficial) {
-            imageModelEl.value = 'gemini-3-pro-image-preview';
-          } else {
-            imageModelEl.value = 'nano-banana-pro';
-          }
-          syncImageModelFields();
+
+    // Dual-provider: populate dropdowns from ProviderRegistry via background
+    chrome.runtime.sendMessage({ action: 'listProviders' }, function (resp) {
+      if (!resp) return;
+      var textProvEl = root.querySelector('.tfe-text-provider');
+      var textModelEl = root.querySelector('.tfe-text-model');
+      var mediaProvEl = root.querySelector('.tfe-media-provider');
+      var mediaModelEl = root.querySelector('.tfe-media-model');
+
+      function fillSelect(sel, items, valueFn, labelFn) {
+        if (!sel) return;
+        sel.innerHTML = '';
+        (items || []).forEach(function (item) {
+          var opt = document.createElement('option');
+          opt.value = valueFn(item);
+          opt.textContent = labelFn(item);
+          sel.appendChild(opt);
+        });
+      }
+
+      function fillModels(modelSel, providerId, list) {
+        var prov = (list || []).find(function (p) { return p.id === providerId; });
+        fillSelect(modelSel, prov ? prov.models : [], function (m) { return m.id; }, function (m) { return m.name; });
+      }
+
+      fillSelect(textProvEl, resp.text, function (p) { return p.id; }, function (p) { return p.name; });
+      fillSelect(mediaProvEl, resp.media, function (p) { return p.id; }, function (p) { return p.name; });
+
+      if (textProvEl) {
+        textProvEl.addEventListener('change', function () {
+          fillModels(textModelEl, this.value, resp.text);
+        });
+        fillModels(textModelEl, textProvEl.value, resp.text);
+      }
+      if (mediaProvEl) {
+        mediaProvEl.addEventListener('change', function () {
+          fillModels(mediaModelEl, this.value, resp.media);
+        });
+        fillModels(mediaModelEl, mediaProvEl.value, resp.media);
+      }
+
+      // Load saved values after dropdowns are populated
+      chrome.storage.local.get([
+        'tilda_flows_text_provider', 'tilda_flows_text_api_key', 'tilda_flows_text_model',
+        'tilda_flows_media_provider', 'tilda_flows_media_api_key', 'tilda_flows_media_model',
+        'tilda_flows_api_provider', 'tilda_flows_api_key', 'tilda_flows_official_gemini_api_key'
+      ], function (r) {
+        var tp = r.tilda_flows_text_provider;
+        var tk = r.tilda_flows_text_api_key;
+        var tm = r.tilda_flows_text_model;
+        var mp = r.tilda_flows_media_provider;
+        var mk = r.tilda_flows_media_api_key;
+        var mm = r.tilda_flows_media_model;
+
+        // Legacy migration
+        if (!tp && r.tilda_flows_api_provider) {
+          tp = r.tilda_flows_api_provider === 'official' ? 'google' : 'kie';
+          tk = r.tilda_flows_api_provider === 'official' ? r.tilda_flows_official_gemini_api_key : r.tilda_flows_api_key;
         }
+        if (!mp && r.tilda_flows_api_provider) {
+          mp = r.tilda_flows_api_provider === 'official' ? 'google-imagen' : 'kie-banana';
+          mk = r.tilda_flows_api_provider === 'official' ? r.tilda_flows_official_gemini_api_key : r.tilda_flows_api_key;
+        }
+
+        if (tp && textProvEl) { textProvEl.value = tp; fillModels(textModelEl, tp, resp.text); }
+        if (tk) { var el = root.querySelector('.tfe-text-api-key'); if (el) el.value = tk; }
+        if (tm && textModelEl && textModelEl.querySelector('option[value="' + tm + '"]')) textModelEl.value = tm;
+
+        if (mp && mediaProvEl) { mediaProvEl.value = mp; fillModels(mediaModelEl, mp, resp.media); }
+        if (mk) { var el2 = root.querySelector('.tfe-media-api-key'); if (el2) el2.value = mk; }
+        if (mm && mediaModelEl && mediaModelEl.querySelector('option[value="' + mm + '"]')) mediaModelEl.value = mm;
       });
-    }
+    });
 
     if (imageModelEl) imageModelEl.addEventListener('change', syncImageModelFields);
     var wordstatGeoModeEl = root.querySelector('.tfe-wordstat-geo-mode');
@@ -689,28 +723,19 @@
     loadTextPresets();
     renderUsedKeywords({ enabled: false, reason: 'awaiting_run' });
 
-    // Загружаем сохранённые настройки в панель
-    chrome.storage.local.get([API_KEY_STORAGE, OFFICIAL_API_KEY_STORAGE, API_PROVIDER_STORAGE, WORDSTAT_API_KEY_STORAGE, 'tilda_flows_author_name', 'tilda_flows_author_link', COVER_PRESET_LAST_STORAGE, TONE_OF_VOICE_KEY, BRAND_KNOWLEDGE_KEY, CUSTOM_FOOTER_KEY, 'tilda_flows_panel_collapsed'], function (data) {
+    // Загружаем сохранённые настройки в панель (dual-provider keys loaded separately via listProviders callback)
+    chrome.storage.local.get([WORDSTAT_API_KEY_STORAGE, 'tilda_flows_author_name', 'tilda_flows_author_link', COVER_PRESET_LAST_STORAGE, TONE_OF_VOICE_KEY, BRAND_KNOWLEDGE_KEY, CUSTOM_FOOTER_KEY, 'tilda_flows_panel_collapsed', 'tilda_flows_text_api_key', 'tilda_flows_media_api_key', API_KEY_STORAGE, OFFICIAL_API_KEY_STORAGE], function (data) {
       if (data.tilda_flows_panel_collapsed) {
         root.classList.add('collapsed');
       }
 
-      var providerEl = root.querySelector('.tfe-api-provider');
-      var apiKeyEl = root.querySelector('.tfe-api-key');
-      var officialKeyEl = root.querySelector('.tfe-official-api-key');
       var wordstatApiKeyEl = root.querySelector('.tfe-wordstat-api-key');
       var authorNameEl = root.querySelector('.tfe-author-name');
       var authorLinkEl = root.querySelector('.tfe-author-link');
       var toneOfVoiceEl = root.querySelector('.tfe-tone-of-voice');
       var brandKnowledgeEl = root.querySelector('.tfe-brand-knowledge');
       var customFooterEl = root.querySelector('.tfe-custom-footer');
-      
-      if (providerEl && data[API_PROVIDER_STORAGE]) {
-        providerEl.value = data[API_PROVIDER_STORAGE];
-        providerEl.dispatchEvent(new Event('change'));
-      }
-      if (apiKeyEl && data[API_KEY_STORAGE]) apiKeyEl.value = data[API_KEY_STORAGE];
-      if (officialKeyEl && data[OFFICIAL_API_KEY_STORAGE]) officialKeyEl.value = data[OFFICIAL_API_KEY_STORAGE];
+
       if (wordstatApiKeyEl && data[WORDSTAT_API_KEY_STORAGE]) wordstatApiKeyEl.value = data[WORDSTAT_API_KEY_STORAGE];
       if (authorNameEl && data.tilda_flows_author_name) authorNameEl.value = data.tilda_flows_author_name;
       if (authorLinkEl && data.tilda_flows_author_link) authorLinkEl.value = data.tilda_flows_author_link;
@@ -721,7 +746,8 @@
       const presetSelectEl = root.querySelector('.tfe-cover-preset-select');
       if (presetSelectEl && data[COVER_PRESET_LAST_STORAGE]) presetSelectEl.value = data[COVER_PRESET_LAST_STORAGE];
       // Если ни одного ключа не задано — открываем настройки автоматически
-      if (!data[API_KEY_STORAGE] && !data[OFFICIAL_API_KEY_STORAGE] && settingsEl) {
+      var hasAnyKey = data.tilda_flows_text_api_key || data.tilda_flows_media_api_key || data[API_KEY_STORAGE] || data[OFFICIAL_API_KEY_STORAGE];
+      if (!hasAnyKey && settingsEl) {
         settingsEl.classList.add('tfe-settings-open');
         if (settingsBtn) settingsBtn.classList.add('active');
       }
@@ -2450,9 +2476,14 @@
   function onSaveSettings() {
     const root = document.getElementById('tilda-flows-extension-root');
     if (!root) return;
-    const provider = ((root.querySelector('.tfe-api-provider') || {}).value || 'kie').trim();
-    const apiKey = ((root.querySelector('.tfe-api-key') || {}).value || '').trim();
-    const officialApiKey = ((root.querySelector('.tfe-official-api-key') || {}).value || '').trim();
+
+    const textProvider = ((root.querySelector('.tfe-text-provider') || {}).value || 'kie').trim();
+    const textApiKey = ((root.querySelector('.tfe-text-api-key') || {}).value || '').trim();
+    const textModel = ((root.querySelector('.tfe-text-model') || {}).value || '').trim();
+    const mediaProvider = ((root.querySelector('.tfe-media-provider') || {}).value || 'kie-banana').trim();
+    const mediaApiKey = ((root.querySelector('.tfe-media-api-key') || {}).value || '').trim();
+    const mediaModel = ((root.querySelector('.tfe-media-model') || {}).value || '').trim();
+
     const wordstatApiKey = ((root.querySelector('.tfe-wordstat-api-key') || {}).value || '').trim();
     const authorName = ((root.querySelector('.tfe-author-name') || {}).value || '').trim();
     const authorLink = ((root.querySelector('.tfe-author-link') || {}).value || '').trim();
@@ -2461,13 +2492,24 @@
     const brandKnowledge = ((root.querySelector('.tfe-brand-knowledge') || {}).value || '').trim();
     const customFooter = ((root.querySelector('.tfe-custom-footer') || {}).value || '').trim();
 
+    // Legacy compat: also write old keys so existing api-text.js/api-image.js still work
+    const legacyProvider = textProvider === 'google' ? 'official' : 'kie';
+    const legacyKey = textApiKey;
+    const legacyOfficialKey = textProvider === 'google' ? textApiKey : '';
+
     const statusEl = root.querySelector('.tfe-settings-status');
     const btn = root.querySelector('[data-action="saveSettings"]');
     if (btn) { btn.disabled = true; btn.textContent = 'Сохранение…'; }
     chrome.storage.local.set({
-      [API_PROVIDER_STORAGE]: provider,
-      tilda_flows_api_key: apiKey,
-      [OFFICIAL_API_KEY_STORAGE]: officialApiKey,
+      tilda_flows_text_provider: textProvider,
+      tilda_flows_text_api_key: textApiKey,
+      tilda_flows_text_model: textModel,
+      tilda_flows_media_provider: mediaProvider,
+      tilda_flows_media_api_key: mediaApiKey,
+      tilda_flows_media_model: mediaModel,
+      [API_PROVIDER_STORAGE]: legacyProvider,
+      tilda_flows_api_key: legacyKey,
+      [OFFICIAL_API_KEY_STORAGE]: legacyOfficialKey,
       [WORDSTAT_API_KEY_STORAGE]: wordstatApiKey,
       tilda_flows_author_name: authorName,
       tilda_flows_author_link: authorLink,
@@ -2477,11 +2519,10 @@
     }, function () {
       if (btn) { btn.disabled = false; btn.textContent = 'Сохранено ✓'; setTimeout(() => { btn.textContent = 'Сохранить настройки'; }, 3000); }
       if (statusEl) {
-        const keyState = provider === 'official' 
-          ? (officialApiKey ? 'Official: OK' : 'Official: не задан') 
-          : (apiKey ? 'Kie: OK' : 'Kie: не задан');
+        const textState = textApiKey ? ('Текст: ' + textProvider + ' ✓') : 'Текст: ключ не задан';
+        const mediaState = mediaApiKey ? ('Обложки: ' + mediaProvider + ' ✓') : 'Обложки: ключ не задан';
         const wordstatState = wordstatApiKey ? 'Wordstat: OK' : 'Wordstat: off';
-        statusEl.textContent = keyState + ' | ' + wordstatState + '.';
+        statusEl.textContent = textState + ' | ' + mediaState + ' | ' + wordstatState;
         statusEl.className = 'tfe-settings-status tfe-status show success';
         setTimeout(() => { statusEl.className = 'tfe-settings-status tfe-status'; }, 4000);
       }
