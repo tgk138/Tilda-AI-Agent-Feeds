@@ -46,6 +46,10 @@ This is **Tilda IA Agent** — a Chrome Extension (Manifest V3) that automates b
 - **Google AI Studio** (optional alternative): direct Gemini 3.1 Pro text + Gemini 3 Pro Image
 - **Yandex Wordstat** (optional): SEO keyword research
 
+### Architecture decisions
+
+- **Text and Media providers are independent.** Users must be able to pick one provider for text generation and a different provider for image generation (e.g. OpenAI for text + Nano Banana Pro for images). The provider system must reflect this with separate `TextProvider` and `MediaProvider` interfaces and independent config fields in settings.
+
 ### Gotchas
 
 - The extension icon `tilda-kovcheg.png` must exist in the project root for Chrome to display the icon correctly.
