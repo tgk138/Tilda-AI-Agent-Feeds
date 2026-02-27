@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tilda Feeds — Тестовая страница</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      min-height: 100vh;
+    }
+    .header {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header h1 { font-size: 18px; font-weight: 600; }
+    .header .badge {
+      background: #e94560;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .container {
+      max-width: 800px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #1a1a2e;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+      margin-top: 16px;
+    }
+    label:first-child { margin-top: 0; }
+    input[type="text"], textarea, select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #6B46C1;
+      box-shadow: 0 0 0 3px rgba(107,70,193,0.1);
+    }
+    textarea { min-height: 200px; resize: vertical; }
+    .ql-editor { min-height: 200px; }
+    .field-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .info {
+      background: #f0f7ff;
+      border: 1px solid #c3dafe;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #2d3748;
+    }
+    .info strong { color: #6B46C1; }
+    .save-btn {
+      background: #6B46C1;
+      color: #fff;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.2s;
+    }
+    .save-btn:hover { background: #553c9a; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Tilda Потоки — Редактор поста</h1>
+  <span class="badge">Тестовая страница</span>
+</div>
+
+<div class="container">
+  <div class="card info">
+    <strong>Эта страница имитирует редактор постов Tilda Feeds.</strong><br>
+    Расширение TILDA IA AGENT автоматически покажет свою панель справа.<br>
+    Используйте панель агента чтобы сгенерировать текст и обложку — они заполнят поля ниже.
+  </div>
+
+  <div class="card">
+    <h2>Основное</h2>
+    <label for="feed_title">Заголовок поста</label>
+    <input type="text" id="feed_title" name="feed_title" placeholder="Введите заголовок...">
+    
+    <label for="title">Альтернативный заголовок</label>
+    <input type="text" id="title" name="title" placeholder="title">
+  </div>
+
+  <div class="card">
+    <h2>Текст статьи</h2>
+    <div class="ql-editor" contenteditable="true" data-placeholder="Введите текст статьи..." style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; min-height: 300px; font-size: 15px; line-height: 1.7;"></div>
+  </div>
+
+  <div class="card">
+    <h2>Описание</h2>
+    <label for="descr">Краткое описание (excerpt)</label>
+    <textarea name="descr" id="descr" rows="3" placeholder="Описание для превью..."></textarea>
+  </div>
+
+  <div class="card">
+    <h2>SEO</h2>
+    <div class="field-group">
+      <div>
+        <label for="seo_title">SEO Title</label>
+        <input type="text" name="seo_title" id="seo_title" placeholder="SEO заголовок">
+      </div>
+      <div>
+        <label for="seo_keywords">Ключевые слова</label>
+        <input type="text" name="seo_keywords" id="seo_keywords" placeholder="ключ1, ключ2">
+      </div>
+    </div>
+    <label for="seo_descr">SEO Description</label>
+    <textarea name="seo_descr" id="seo_descr" rows="2" placeholder="SEO описание 150-160 символов"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Соцсети и автор</h2>
+    <div class="field-group">
+      <div>
+        <label for="fb_title">OG Title</label>
+        <input type="text" name="fb_title" id="fb_title" placeholder="Заголовок для соцсетей">
+      </div>
+      <div>
+        <label for="fb_descr">OG Description</label>
+        <input type="text" name="fb_descr" id="fb_descr" placeholder="Описание для соцсетей">
+      </div>
+    </div>
+    <div class="field-group">
+      <div>
+        <label for="authorname">Автор</label>
+        <input type="text" name="authorname" id="authorname" placeholder="Имя автора">
+      </div>
+      <div>
+        <label for="authorurl">Ссылка автора</label>
+        <input type="text" name="authorurl" id="authorurl" placeholder="https://...">
+      </div>
+    </div>
+    <label for="postalias">Slug (ЧПУ)</label>
+    <input type="text" name="postalias" id="postalias" placeholder="slug-dlya-url">
+    
+    <label for="tags">Теги</label>
+    <input type="text" name="tags" id="tags" placeholder="Тег1, Тег2, Тег3">
+  </div>
+
+  <div class="card">
+    <button class="save-btn" onclick="alert('Сохранено! (тестовая страница)')">Сохранить пост</button>
+  </div>
+</div>
+
+</body>
+</html>

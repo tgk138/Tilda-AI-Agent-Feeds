@@ -25,7 +25,8 @@
       "https://tilda.ru/*",
       "https://feeds.tilda.ru/*",
       "https://*.tilda.ws/*",
-      "https://publish.tilda.cc/*"
+      "https://publish.tilda.cc/*",
+      "http://localhost:*/*"
     ],
     "js": ["content/content.js"],
     "css": ["content/content.css"],
@@ -55,7 +56,8 @@
       "https://tilda.ru/*",
       "https://feeds.tilda.ru/*",
       "https://*.tilda.ws/*",
-      "https://publish.tilda.cc/*"
+      "https://publish.tilda.cc/*",
+      "http://localhost:*/*"
     ]
   }]
 }
