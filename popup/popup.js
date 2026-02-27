@@ -18,13 +18,13 @@ const SK_LEGACY_OFFICIAL_KEY = 'tilda_flows_official_gemini_api_key';
 
 const PROVIDER_HINTS = {
   kie: 'Один ключ для Gemini 3 Pro. <a href="https://kie.ai" target="_blank">Получить на kie.ai</a>',
-  google: 'Официальный ключ Google AI Studio. <a href="https://aistudio.google.com/" target="_blank">Получить</a> (В РФ нужен VPN)',
+  google: '⚠️ В РФ нужен VPN! Официальный ключ Google AI Studio. <a href="https://aistudio.google.com/" target="_blank">Получить</a>. Без VPN будет ошибка «location not supported».',
   openrouter: 'Единый ключ к 500+ моделям. <a href="https://openrouter.ai/keys" target="_blank">Получить на OpenRouter</a>',
   openai: 'Ключ OpenAI API. <a href="https://platform.openai.com/api-keys" target="_blank">Получить</a>',
   anthropic: 'Ключ Anthropic API. <a href="https://console.anthropic.com/" target="_blank">Получить</a>',
   'kie-banana': 'Тот же ключ kie.ai. <a href="https://kie.ai" target="_blank">Получить</a>',
   'kie-gpt-image': 'Тот же ключ kie.ai, модели GPT Image. <a href="https://kie.ai" target="_blank">Получить</a>',
-  'google-imagen': 'Официальный ключ Google AI Studio. <a href="https://aistudio.google.com/" target="_blank">Получить</a>',
+  'google-imagen': '⚠️ В РФ нужен VPN! Официальный ключ Google AI Studio. <a href="https://aistudio.google.com/" target="_blank">Получить</a>. Без VPN будет ошибка «location not supported».',
   'gpt-image': 'Ключ OpenAI API. <a href="https://platform.openai.com/api-keys" target="_blank">Получить</a>',
 };
 
